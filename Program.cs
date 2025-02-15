@@ -1,7 +1,6 @@
 ﻿using System.Text;
 namespace Ball;
 
-
 enum Pixel
 {
     EMPTY = 0,
@@ -10,8 +9,9 @@ enum Pixel
 
 class Display
 {
-    public const int WIDTH = 64;
-    public const int HEIGHT = 64;
+    public const int WIDTH = 128;
+    public const int HEIGHT = 64; 
+    public const int FPS = 120;
 
     private Pixel[] display;
     public Display()
@@ -73,7 +73,7 @@ class Display
     }
     public void Clear()
     {
-        //TODO
+        Console.SetCursorPosition(0, 0);
     }
 
 }
@@ -85,18 +85,29 @@ class Program
 {
     static void Main()
     {
+        Console.CursorVisible = false;
         var display = new Display();
         var centerY = Display.HEIGHT/2;
-        var centerX = Display.WIDTH/2;
+        var centerX = 32; 
         var radius = 16;
-        var velY = 5;
-        var velX = 0;
-        for(int i = 0; i < 10; ++i){
+        var velY = 1;
+        var velX = 1;
+        for(int i = 0; i < 10000; ++i){
             centerX+=velX;
             centerY+=velY;
+            if(Math.Abs(centerY+radius - Display.HEIGHT) <=1)
+                velY = -velY;
+            if(centerY-radius <= 10)
+                velY = -velY;
+            if(Math.Abs(centerX+radius - Display.WIDTH) <=1)
+                velX = -velX;
+            if(centerX-radius <= 1)
+                velX = -velX;
+
+            display.Clear();
             display.DrawBall(centerX, centerY, radius);
             display.Print();
-            Console.WriteLine("----------------------------------");
+            Thread.Sleep(1000/Display.FPS);
             display.Fill(Pixel.EMPTY);
         }
     }
