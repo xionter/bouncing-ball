@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using System.Threading;
+
 namespace Ball;
 
 enum Pixel
@@ -10,10 +13,11 @@ enum Pixel
 class Display
 {
     public const int WIDTH = 128;
-    public const int HEIGHT = 32; 
-    public const int FPS = 60;
+    public const int HEIGHT = 32;
+    public const int FPS = 60; // Lowered FPS for visibility
 
     private Pixel[] display;
+    
     public Display()
     {
         display = new Pixel[WIDTH * HEIGHT];
@@ -22,7 +26,7 @@ class Display
 
     public void Fill(Pixel p)
     {
-        for(int x = 0; x < HEIGHT * WIDTH; ++x)
+        for (int x = 0; x < HEIGHT * WIDTH; ++x)
         {
             display[x] = p;
         }
@@ -31,69 +35,50 @@ class Display
     public void Print()
     {
         char[,] table = new char[2,2]{
-        //    0   1    top/bottom
+            //0   1    top/bottom
             {' ','*'},   //0
             {',','C'}    //1
         };
-        var frame = new StringBuilder(WIDTH * HEIGHT);
-        for(int y = 0; y < HEIGHT/2; ++y)
+        var row = new StringBuilder(WIDTH);
+        
+        for (int y = 0; y < HEIGHT / 2; ++y)
         {
-            for(int x = 0; x < WIDTH; ++x)
+            for (int x = 0; x < WIDTH; ++x)
             {
-                var top = (int)display[(2*y + 0)*WIDTH + x]; 
-                var bottom = (int)display[(2*y + 1)*WIDTH  + x];
-                frame.Append(table[top, bottom]);
+                var top = (int)display[(2 * y + 0) * WIDTH + x];
+                var bottom = (int)display[(2 * y + 1) * WIDTH + x];
+                row.Append(table[top, bottom]); 
             }
-            frame.Append("\n");
+            Console.WriteLine(row.ToString());
+            row.Clear();
         }
-        Console.Write(frame);
     }
-    
+
     public void DrawBall(float cX, float cY, float r)
     {
         var beginX = cX - r;
         var beginY = cY - r;
         var endX = cX + r;
         var endY = cY + r;
-        for(float y = beginY; y <= endY; ++y)
+
+        for (int y = (int)beginY; y <= endY; ++y)
         {
-            for(float x = beginX; x <= endX; ++x)
+            for (int x = (int)beginX; x <= endX; ++x)
             {
-                var dY = cY - y - 0.5f;
-                var dX = cX - x - 0.5f;
-                if(dX*dX + dY*dY <= r*r){
-                    if(0 <= y && y < HEIGHT && 0 <= x && x < WIDTH)
+                var dY = cY - (y + 0.5f);
+                var dX = cX - (x + 0.5f);
+                
+                if (dX * dX + dY * dY <= r * r)
+                {
+                    if (0 <= y && y < HEIGHT && 0 <= x && x < WIDTH)
                     {
-                        display[(int)(y*WIDTH + x)] = Pixel.FULL;
+                        display[y * WIDTH + x] = Pixel.FULL;
                     }
                 }
             }
         }
     }
 
-    public void CheckCollision(ref float centerX, ref float centerY, float radius,ref float velX, ref float velY)
-    {
-        if(centerY+radius - Display.HEIGHT >= 0.0f)
-        {
-            velY = -velY;
-            centerY = Display.HEIGHT - radius;
-        }
-        else if(centerY-radius <= 0.0f)
-        {
-            velY = -velY;
-            centerY = radius; 
-        }
-        else if(centerX+radius - Display.WIDTH >= 0.0f)
-        {
-            velX = -velX;
-            centerX = Display.WIDTH - radius;
-        }
-        else if(centerX-radius <= 0.0f)
-        {
-            velX = -velX;
-            centerX = radius;
-        }
-    }
     public void Clear()
     {
         Console.Write("\x1b[H");
@@ -106,25 +91,33 @@ class Program
     {
         Console.CursorVisible = false;
         var display = new Display();
-        var centerY = (float)Display.HEIGHT/2;
-        var centerX = 32.0f; 
-        var radius = 8.0f;
-        var velY = 1.0f;
-        var velX = 1.0f;
 
-        for(int i = 0; i < 10000; ++i){
-            centerX+=velX;
-            centerY+=velY;
+        display.Clear();
 
-            display.CheckCollision(ref centerX, ref centerY,radius,ref velX,ref velY);
+        float radius = 8.0f;
+        float centerY = -radius;
+        float centerX = -radius; 
+        float velY = 0.5f; 
+        float velX = 0.5f; 
+        float accY = 0.1f;
 
-            display.Clear();
-            display.DrawBall(centerX, centerY, radius);
-            display.Print();
+        for (int i = 0; i < 10000; ++i)
+        {
+            centerX += velX;
+            centerY += velY;
+            velY += accY;
+            
+            if (centerY > Display.HEIGHT - radius)
+            {
+                centerY = Display.HEIGHT - radius;
+                velY = -velY * 0.65f; 
+            }
 
             display.Fill(Pixel.EMPTY);
-
-            Thread.Sleep(1000/Display.FPS);
+            display.DrawBall(centerX, centerY, radius);
+            display.Print();
+            display.Clear();
+            Thread.Sleep(1000 / Display.FPS);
         }
     }
 }
