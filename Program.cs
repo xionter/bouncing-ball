@@ -34,8 +34,8 @@ class Vector
 }
 class Display
 {
-    public const int WIDTH = 128;
-    public const int HEIGHT = 32;
+    public const int WIDTH = 256;
+    public const int HEIGHT = 96;
     public const int FPS = 60; 
 
     private Pixel[] display;
@@ -59,7 +59,7 @@ class Display
         char[,] table = new char[2,2]{
             //0   1    top/bottom
             {' ','*'},   //0
-            {',','C'}    //1
+            {',','O'}    //1
         };
         var row = new StringBuilder(WIDTH);
         
@@ -114,9 +114,9 @@ class Program
 
         display.Clear();
 
-        float radius = 8.0f;
-        var center = new Vector(-radius);
-        var vel = new Vector(0.5f);
+        float radius = Display.HEIGHT / 4.0f; 
+        var center = new Vector(radius);
+        var vel = new Vector(2.5f);
 
         float accY = 0.1f;
 
@@ -128,8 +128,26 @@ class Program
             if (center.y > Display.HEIGHT - radius)
             {
                 center.y = Display.HEIGHT - radius;
-                vel.y = -vel.y * 0.65f; 
+                vel.y = -vel.y * 0.9f; 
             }
+
+            if (center.y < radius) 
+            {
+                center.y = radius;
+                vel.y = -vel.y * 0.9f; 
+            }
+            if (center.x > Display.WIDTH - radius)
+            {
+                center.x = Display.WIDTH - radius;
+                vel.x = -vel.x * 0.8f;
+            }
+
+            if (center.x < radius) 
+            {
+                center.x = radius;
+                vel.x = -vel.x * 0.8f;
+            }
+
 
             display.Fill(Pixel.EMPTY);
             display.DrawBall(center, radius);
