@@ -10,11 +10,33 @@ enum Pixel
     FULL = 1
 }
 
+class Vector
+{
+    public float x;
+    public float y;
+    
+    public Vector(float x, float y)
+    {
+        this.x = x; this.y = y;
+    }
+    public Vector(float num)
+    {
+        this.x = num; this.y = num;
+    }
+    public void Add (Vector A)
+    {
+        x += A.x; y += A.y;
+    }
+    public void Sub (Vector A)
+    {
+        x -= A.x; y -= A.y;
+    }
+}
 class Display
 {
     public const int WIDTH = 128;
     public const int HEIGHT = 32;
-    public const int FPS = 60; // Lowered FPS for visibility
+    public const int FPS = 60; 
 
     private Pixel[] display;
     
@@ -54,19 +76,17 @@ class Display
         }
     }
 
-    public void DrawBall(float cX, float cY, float r)
+    public void DrawBall(Vector center, float r)
     {
-        var beginX = cX - r;
-        var beginY = cY - r;
-        var endX = cX + r;
-        var endY = cY + r;
+        var begin = new Vector(center.x - r, center.y - r);
+        var end = new Vector(center.x + r, center.y + r);
 
-        for (int y = (int)beginY; y <= endY; ++y)
+        for (int y = (int)begin.y; y <= end.y; ++y)
         {
-            for (int x = (int)beginX; x <= endX; ++x)
+            for (int x = (int)begin.x; x <= end.x; ++x)
             {
-                var dY = cY - (y + 0.5f);
-                var dX = cX - (x + 0.5f);
+                var dY = center.y - (y + 0.5f);
+                var dX = center.x - (x + 0.5f);
                 
                 if (dX * dX + dY * dY <= r * r)
                 {
@@ -95,26 +115,24 @@ class Program
         display.Clear();
 
         float radius = 8.0f;
-        float centerY = -radius;
-        float centerX = -radius; 
-        float velY = 0.5f; 
-        float velX = 0.5f; 
+        var center = new Vector(-radius);
+        var vel = new Vector(0.5f);
+
         float accY = 0.1f;
 
-        for (int i = 0; i < 10000; ++i)
+        while(true)
         {
-            centerX += velX;
-            centerY += velY;
-            velY += accY;
+            center.Add(vel);
+            vel.Add(new Vector(0, accY));
             
-            if (centerY > Display.HEIGHT - radius)
+            if (center.y > Display.HEIGHT - radius)
             {
-                centerY = Display.HEIGHT - radius;
-                velY = -velY * 0.65f; 
+                center.y = Display.HEIGHT - radius;
+                vel.y = -vel.y * 0.65f; 
             }
 
             display.Fill(Pixel.EMPTY);
-            display.DrawBall(centerX, centerY, radius);
+            display.DrawBall(center, radius);
             display.Print();
             display.Clear();
             Thread.Sleep(1000 / Display.FPS);
